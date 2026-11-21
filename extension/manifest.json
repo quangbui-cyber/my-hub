@@ -1,0 +1,113 @@
+{
+  "manifest_version": 3,
+  "name": "My Hub Recorder - Bắt link & Ghi âm Meet, Zoom, Teams",
+  "version": "1.5.0",
+  "description": "Tự động bắt link Google Meet, Zoom, Microsoft Teams trên mọi trang web và 1-click ghi âm cuộc họp + tạo biên bản AI cho My Hub",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "permissions": [
+    "tabCapture",
+    "offscreen",
+    "storage",
+    "activeTab",
+    "alarms",
+    "tabs",
+    "scripting",
+    "notifications",
+    "clipboardWrite"
+  ],
+  "host_permissions": [
+    "https://meet.google.com/*",
+    "https://*.zoom.us/*",
+    "https://zoom.us/*",
+    "https://teams.microsoft.com/*",
+    "https://teams.live.com/*",
+    "https://*.teams.microsoft.com/*",
+    "http://localhost:3000/*",
+    "http://127.0.0.1:3000/*",
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://meet.google.com/*",
+        "https://*.zoom.us/*",
+        "https://zoom.us/*",
+        "https://teams.microsoft.com/*",
+        "https://teams.live.com/*",
+        "https://*.teams.microsoft.com/*"
+      ],
+      "js": [
+        "meet-hook.js"
+      ],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "https://meet.google.com/*",
+        "https://*.zoom.us/*",
+        "https://zoom.us/*",
+        "https://teams.microsoft.com/*",
+        "https://teams.live.com/*",
+        "https://*.teams.microsoft.com/*"
+      ],
+      "js": [
+        "content-meeting.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "exclude_matches": [
+        "https://meet.google.com/*"
+      ],
+      "js": [
+        "content-scanner.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "http://localhost:3000/*",
+        "http://127.0.0.1:3000/*"
+      ],
+      "js": [
+        "content-myhub.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png"
+    },
+    "default_title": "My Hub Recorder (Meet · Zoom · Teams)"
+  },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
+  "commands": {
+    "toggle-recording": {
+      "suggested_key": {
+        "default": "Alt+Shift+R",
+        "mac": "Alt+Shift+R"
+      },
+      "description": "Bắt đầu hoặc dừng ghi âm cuộc họp Meet / Zoom / Teams"
+    }
+  }
+}

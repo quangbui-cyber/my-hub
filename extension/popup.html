@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Hub Recorder - Meet, Zoom, Teams</title>
+    <style>
+      :root {
+        --brand: #059669;
+        --brand-hover: #047857;
+        --brand-light: #ecfdf5;
+        --blue: #2563eb;
+        --blue-light: #dbeafe;
+        --indigo: #4f46e5;
+        --indigo-light: #e0e7ff;
+        --danger: #dc2626;
+        --zinc-50: #fafafa;
+        --zinc-100: #f4f4f5;
+        --zinc-200: #e4e4e7;
+        --zinc-300: #d4d4d8;
+        --zinc-400: #a1a1aa;
+        --zinc-500: #71717a;
+        --zinc-700: #3f3f46;
+        --zinc-900: #18181b;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        width: 380px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        font-size: 13px;
+        color: var(--zinc-900);
+        background: #ffffff;
+        padding: 14px 16px 16px;
+      }
+      .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-bottom: 10px;
+        border-bottom: 1px solid var(--zinc-100);
+        margin-bottom: 12px;
+      }
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 700;
+        font-size: 14px;
+      }
+      .logo-icon {
+        width: 24px;
+        height: 24px;
+        border-radius: 7px;
+        background: var(--brand);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 13px;
+      }
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .btn-icon {
+        background: none;
+        border: none;
+        color: var(--zinc-500);
+        cursor: pointer;
+        padding: 4px 6px;
+        border-radius: 6px;
+        font-size: 12px;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+      .btn-icon:hover {
+        color: var(--zinc-900);
+        background: var(--zinc-100);
+      }
+      .card {
+        background: var(--zinc-50);
+        border: 1px solid var(--zinc-200);
+        border-radius: 11px;
+        padding: 12px;
+        margin-bottom: 12px;
+      }
+      .section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 8px;
+      }
+      .section-title {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        color: var(--zinc-500);
+      }
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 7px;
+        border-radius: 5px;
+        font-size: 10px;
+        font-weight: 700;
+      }
+      .badge-meet {
+        background: #dcfce7;
+        color: #15803d;
+      }
+      .badge-zoom {
+        background: #dbeafe;
+        color: #1d4ed8;
+      }
+      .badge-teams {
+        background: #e0e7ff;
+        color: #4338ca;
+      }
+      .badge-idle {
+        background: var(--zinc-200);
+        color: var(--zinc-700);
+      }
+      .input {
+        width: 100%;
+        padding: 7px 10px;
+        font-size: 12px;
+        border: 1px solid var(--zinc-200);
+        border-radius: 7px;
+        background: #ffffff;
+        outline: none;
+        margin-top: 6px;
+      }
+      .input:focus {
+        border-color: var(--brand);
+      }
+      .btn-primary {
+        width: 100%;
+        background: var(--brand);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 10px 14px;
+        font-weight: 600;
+        font-size: 13px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        transition: background 0.15s ease;
+      }
+      .btn-primary:hover:not(:disabled) {
+        background: var(--brand-hover);
+      }
+      .btn-primary:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      .btn-danger {
+        width: 100%;
+        background: var(--danger);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 10px 14px;
+        font-weight: 600;
+        font-size: 13px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+      }
+      .btn-danger:hover {
+        background: #b91c1c;
+      }
+      .btn-secondary {
+        width: 100%;
+        background: white;
+        color: var(--zinc-700);
+        border: 1px solid var(--zinc-200);
+        border-radius: 8px;
+        padding: 8px 12px;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 7px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+      }
+      .btn-secondary:hover {
+        background: var(--zinc-100);
+      }
+      .pulse-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--danger);
+        animation: pulse 1.5s infinite;
+      }
+      @keyframes pulse {
+        0% { transform: scale(0.95); opacity: 1; }
+        50% { transform: scale(1.3); opacity: 0.5; }
+        100% { transform: scale(0.95); opacity: 1; }
+      }
+      .timer {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 28px;
+        font-weight: 700;
+        text-align: center;
+        color: var(--zinc-900);
+        margin: 8px 0;
+      }
+      .spinner {
+        display: inline-block;
+        width: 15px;
+        height: 15px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: #fff;
+        animation: spin 0.8s ease-in-out infinite;
+      }
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+      .link-list {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+        max-height: 210px;
+        overflow-y: auto;
+      }
+      .link-item {
+        background: #ffffff;
+        border: 1px solid var(--zinc-200);
+        border-radius: 9px;
+        padding: 8px 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .link-item-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+      }
+      .link-title {
+        font-weight: 600;
+        font-size: 12px;
+        color: var(--zinc-900);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .link-url {
+        font-size: 11px;
+        color: var(--zinc-500);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-family: ui-monospace, monospace;
+      }
+      .link-actions {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .btn-mini {
+        flex: 1;
+        padding: 4px 7px;
+        font-size: 11px;
+        font-weight: 600;
+        border-radius: 6px;
+        border: 1px solid var(--zinc-200);
+        background: var(--zinc-50);
+        color: var(--zinc-700);
+        cursor: pointer;
+        text-align: center;
+      }
+      .btn-mini:hover {
+        background: var(--zinc-200);
+      }
+      .btn-mini-primary {
+        background: var(--brand-light);
+        border-color: #a7f3d0;
+        color: var(--brand-hover);
+      }
+      .btn-mini-primary:hover {
+        background: #d1fae5;
+      }
+      .tabs-bar {
+        display: flex;
+        gap: 4px;
+        background: var(--zinc-100);
+        padding: 3px;
+        border-radius: 8px;
+        margin-bottom: 8px;
+      }
+      .tab-btn {
+        flex: 1;
+        border: none;
+        background: transparent;
+        padding: 5px 8px;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--zinc-500);
+        border-radius: 6px;
+        cursor: pointer;
+      }
+      .tab-btn.active {
+        background: #ffffff;
+        color: var(--zinc-900);
+        box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+      }
+      .empty-hint {
+        text-align: center;
+        font-size: 11px;
+        color: var(--zinc-500);
+        padding: 14px 8px;
+        background: #ffffff;
+        border: 1px dashed var(--zinc-200);
+        border-radius: 8px;
+      }
+      .hidden {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <div class="logo">
+        <div class="logo-icon">🎙️</div>
+        <span>My Hub Recorder</span>
+      </div>
+      <div class="header-actions">
+        <button id="btnOpenHub" class="btn-icon" title="Mở trang Biên bản họp My Hub">✨ My Hub</button>
+        <button id="btnOptions" class="btn-icon" title="Cài đặt Micro & Máy chủ">⚙️</button>
+      </div>
+    </div>
+
+    <!-- MÀN HÌNH 1: SẴN SÀNG GHI ÂM & BẮT LINK MEET / ZOOM / TEAMS -->
+    <div id="viewReady">
+      <!-- Khối Phòng họp đang mở -->
+      <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+          <span id="roomBadge" class="badge badge-idle">Chưa vào phòng họp</span>
+          <span style="font-size: 10px; color: var(--zinc-400);">Alt+Shift+R</span>
+        </div>
+        <div id="meetingTitleDisplay" style="font-weight: 600; font-size: 13px; line-height: 1.35; margin-bottom: 3px;">
+          Đang kiểm tra tab cuộc họp...
+        </div>
+        <div id="meetingSubtext" style="font-size: 11px; color: var(--zinc-500); margin-bottom: 8px;">
+          Mở Google Meet, Zoom Web hoặc Microsoft Teams để ghi âm 1 click.
+        </div>
+
+        <div id="recordingMetaInputs" class="hidden" style="margin-bottom: 10px;">
+          <input
+            id="customTitleInput"
+            type="text"
+            class="input"
+            placeholder="Tên cuộc họp (tuỳ chọn, để trống lấy tự động)"
+          />
+          <input
+            id="attendeesInput"
+            type="text"
+            class="input"
+            placeholder="Người tham dự (VD: Lan, Minh, Huy — giúp AI giao đúng việc)"
+          />
+        </div>
+
+        <button id="btnStart" class="btn-primary" disabled>
+          <span>●</span> Bắt đầu ghi âm & Tạo biên bản AI
+        </button>
+      </div>
+
+      <!-- Khối Bắt link Meet / Zoom / Teams trên trang hoặc dán nhanh -->
+      <div class="card" style="margin-bottom: 0;">
+        <div class="section-header">
+          <span class="section-title">🔗 Link Meet · Zoom · Teams bắt được</span>
+          <button id="btnRescanPage" class="btn-icon" style="font-size: 11px; padding: 2px 6px;">🔄 Quét lại</button>
+        </div>
+
+        <div class="tabs-bar">
+          <button id="tabPageLinks" class="tab-btn active">Trên trang này (<span id="countPageLinks">0</span>)</button>
+          <button id="tabHistoryLinks" class="tab-btn">Đã bắt gần đây (<span id="countHistoryLinks">0</span>)</button>
+        </div>
+
+        <!-- Ô dán nhanh link hoặc mã phòng bất kỳ -->
+        <div style="display: flex; gap: 6px; margin-bottom: 8px;">
+          <input
+            id="manualLinkInput"
+            type="text"
+            class="input"
+            style="margin-top: 0;"
+            placeholder="Dán link Meet / Zoom / Teams hoặc mã abc-defg-hij..."
+          />
+          <button
+            id="btnAddManualLink"
+            class="btn-mini btn-mini-primary"
+            style="flex: 0 0 auto; padding: 0 10px;"
+          >
+            + Bắt link
+          </button>
+        </div>
+
+        <div id="linksContainer" class="link-list"></div>
+
+        <div id="historyFooter" class="hidden" style="margin-top: 6px; text-align: right;">
+          <button id="btnClearHistory" class="btn-icon" style="font-size: 11px; color: var(--zinc-400);">
+            Xoá lịch sử link
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MÀN HÌNH 2: ĐANG GHI ÂM CUỘC HỌP -->
+    <div id="viewRecording" class="hidden">
+      <div class="card" style="text-align: center; padding: 16px 12px;">
+        <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+          <div class="pulse-dot"></div>
+          <span style="font-weight: 700; color: var(--danger); font-size: 12px; text-transform: uppercase;">
+            Đang ghi âm cuộc họp (Tab + Micro)
+          </span>
+        </div>
+        <div id="timerDisplay" class="timer">00:00</div>
+        <div
+          id="recMeetingName"
+          style="font-size: 12px; font-weight: 600; color: var(--zinc-700); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
+        ></div>
+        <div style="font-size: 11px; color: var(--zinc-500); margin-top: 8px; line-height: 1.4;">
+          Bản ghi được lưu an toàn mỗi 5 giây. Tự động dừng, tạo biên bản AI và đẩy vào <strong>My Hub</strong> khi bạn rời phòng họp hoặc đóng tab.
+        </div>
+      </div>
+
+      <button id="btnStop" class="btn-danger">
+        ■ Dừng ghi & Tạo biên bản AI
+      </button>
+    </div>
+
+    <!-- MÀN HÌNH 3: ĐANG XỬ LÝ AI (GROQ WHISPER + GEMINI) -->
+    <div id="viewUploading" class="hidden">
+      <div class="card" style="text-align: center; padding: 22px 12px;">
+        <div
+          class="spinner"
+          style="border-color: rgba(5,150,105,0.2); border-top-color: var(--brand); width: 28px; height: 28px; margin-bottom: 12px;"
+        ></div>
+        <p style="font-weight: 700; margin-bottom: 4px;">Đang gửi sang My Hub để chép lời & viết biên bản...</p>
+        <p id="uploadingReason" style="font-size: 11px; color: var(--zinc-500); margin-bottom: 6px;"></p>
+        <p style="font-size: 11px; color: var(--zinc-500); line-height: 1.4;">
+          Groq Whisper đang chép lời tiếng Việt và Gemini đang tổng hợp chủ đề, quyết định & việc cần làm. Bạn có thể đóng popup này hoặc tải ngay file ghi âm bên dưới.
+        </p>
+      </div>
+      <button id="btnDownloadWhileUploading" class="btn-secondary">
+        ⬇️ Tải file ghi âm (.webm) về máy
+      </button>
+    </div>
+
+    <!-- MÀN HÌNH 4: HOÀN TẤT TẠO BIÊN BẢN -->
+    <div id="viewSuccess" class="hidden">
+      <div class="card" style="background: #ecfdf5; border-color: #a7f3d0; padding: 14px 12px;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+          <span style="font-size: 20px;">🎉</span>
+          <div>
+            <p style="font-weight: 700; color: #065f46; font-size: 13px;">Đã tạo biên bản & lưu vào My Hub!</p>
+            <p id="successMeetingTitle" style="font-size: 11px; color: #047857; font-weight: 600;"></p>
+          </div>
+        </div>
+        <p id="successMeetingSummary" style="font-size: 11px; color: #065f46; line-height: 1.45; margin-bottom: 10px;"></p>
+        <button id="btnOpenMeetingRecap" class="btn-primary" style="font-size: 12px; padding: 8px 12px;">
+          ✨ Mở xem Biên bản trên My Hub
+        </button>
+      </div>
+      <button id="btnDownloadSuccess" class="btn-secondary">
+        ⬇️ Tải file ghi âm (.webm) về máy
+      </button>
+      <button id="btnBackToHome" class="btn-secondary">
+        ← Quay lại màn hình chính
+      </button>
+    </div>
+
+    <!-- MÀN HÌNH 5: CHƯA KẾT NỐI ĐƯỢC MY HUB (VẪN TẢI ĐƯỢC FILE GHI ÂM VỀ MÁY) -->
+    <div id="viewFailed" class="hidden">
+      <div class="card" style="background: #fef2f2; border-color: #fecaca; padding: 14px 12px;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+          <span style="font-size: 20px;">⚠️</span>
+          <div>
+            <p style="font-weight: 700; color: #991b1b;">Đã lưu bản ghi âm (chưa tạo biên bản AI)</p>
+            <p id="failedMeetingName" style="font-size: 11px; color: #7f1d1d; font-weight: 600;"></p>
+          </div>
+        </div>
+        <p id="failedReason" style="font-size: 11px; color: #b91c1c; line-height: 1.4; margin-bottom: 6px;"></p>
+        <p style="font-size: 11px; color: var(--zinc-500);">
+          Bản ghi âm vẫn nằm an toàn trên trình duyệt của bạn. Bạn có thể tải file <code>.webm</code> về máy ngay hoặc bật My Hub rồi bấm Thử gửi lại.
+        </p>
+      </div>
+      <button id="btnDownloadFailed" class="btn-primary">
+        ⬇️ Tải file ghi âm (.webm) về máy
+      </button>
+      <button id="btnRetry" class="btn-secondary">
+        🔄 Thử gửi lại sang My Hub
+      </button>
+      <button id="btnDiscard" class="btn-secondary" style="color: var(--danger);">
+        🗑️ Xoá bản ghi tạm này
+      </button>
+    </div>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

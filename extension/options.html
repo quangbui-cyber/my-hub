@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cài đặt My Hub Recorder (Meet · Zoom · Teams)</title>
+    <style>
+      :root {
+        --brand: #059669;
+        --brand-hover: #047857;
+        --brand-light: #ecfdf5;
+        --zinc-50: #fafafa;
+        --zinc-100: #f4f4f5;
+        --zinc-200: #e4e4e7;
+        --zinc-400: #a1a1aa;
+        --zinc-500: #71717a;
+        --zinc-700: #3f3f46;
+        --zinc-900: #18181b;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background: #f8fafc;
+        color: var(--zinc-900);
+        padding: 40px 20px;
+        display: flex;
+        justify-content: center;
+      }
+      .container {
+        width: 100%;
+        max-width: 560px;
+        background: #ffffff;
+        border: 1px solid var(--zinc-200);
+        border-radius: 16px;
+        padding: 32px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+      }
+      .header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 24px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--zinc-100);
+      }
+      .logo-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        background: var(--brand);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        color: white;
+      }
+      h1 { font-size: 18px; font-weight: 700; }
+      p.subtitle { font-size: 13px; color: var(--zinc-500); margin-top: 2px; }
+      .section { margin-bottom: 24px; }
+      .section-title { font-size: 13px; font-weight: 700; margin-bottom: 8px; color: var(--zinc-700); }
+      .field-group { margin-bottom: 16px; }
+      label { display: block; font-size: 12px; font-weight: 600; color: var(--zinc-500); margin-bottom: 6px; }
+      input[type="text"] {
+        width: 100%;
+        padding: 10px 12px;
+        font-size: 13px;
+        border: 1px solid var(--zinc-200);
+        border-radius: 8px;
+        outline: none;
+      }
+      input[type="text"]:focus {
+        border-color: var(--brand);
+        box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.15);
+      }
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px 16px;
+        font-size: 13px;
+        font-weight: 600;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        transition: all 0.15s ease;
+      }
+      .btn-primary { background: var(--brand); color: white; }
+      .btn-primary:hover { background: var(--brand-hover); }
+      .btn-secondary { background: white; border: 1px solid var(--zinc-200); color: var(--zinc-700); }
+      .btn-secondary:hover { background: var(--zinc-50); }
+      .card-status {
+        background: var(--zinc-50);
+        border: 1px solid var(--zinc-200);
+        border-radius: 10px;
+        padding: 14px;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+      .hint { font-size: 11px; color: var(--zinc-400); margin-top: 6px; line-height: 1.4; }
+      .checkbox-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        color: var(--zinc-700);
+        margin-top: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <div class="logo-icon">🎙️</div>
+        <div>
+          <h1>Cài đặt My Hub Recorder</h1>
+          <p class="subtitle">Bắt link & Ghi âm cuộc họp Google Meet, Zoom, Microsoft Teams</p>
+        </div>
+      </div>
+
+      <!-- Cấp quyền Micro -->
+      <div class="section">
+        <div class="section-title">1. Quyền Micro (Thu giọng nói của bạn cùng với tiếng trong tab họp)</div>
+        <div class="card-status">
+          <div>
+            <div id="micStatusText" style="font-weight: 700; font-size: 13px;">Đang kiểm tra micro...</div>
+            <div style="font-size: 12px; color: var(--zinc-500); margin-top: 2px;">
+              Cấp quyền 1 lần duy nhất để Offscreen Audio Mixer trộn giọng bạn và tiếng đối phương
+            </div>
+          </div>
+          <button id="btnRequestMic" class="btn btn-primary">Cấp quyền Micro</button>
+        </div>
+      </div>
+
+      <!-- Cấu hình My Hub & Thông tin mặc định -->
+      <div class="section">
+        <div class="section-title">2. Kết nối ứng dụng My Hub</div>
+        <div class="field-group">
+          <label for="serverInput">Địa chỉ ứng dụng My Hub (mặc định: http://localhost:3000)</label>
+          <input type="text" id="serverInput" placeholder="http://localhost:3000" />
+          <p class="hint">
+            Sau khi dừng ghi âm, Extension sẽ gửi file âm thanh tới <code>/api/recap</code> của My Hub để Groq Whisper chép lời & Gemini viết biên bản, đồng thời lưu thẳng vào trang <strong>/meetings</strong>.
+          </p>
+        </div>
+
+        <div class="field-group">
+          <label for="userNameInput">Tên của bạn (hiển thị khi báo ghi biên bản trong chat Meet)</label>
+          <input type="text" id="userNameInput" placeholder="Ví dụ: Duy Quang" />
+        </div>
+
+        <div class="field-group">
+          <label for="attendeesInput">Danh sách người tham dự mặc định (tuỳ chọn, cách nhau dấu phẩy)</label>
+          <input type="text" id="attendeesInput" placeholder="Ví dụ: Duy Quang, Lan Nguyễn, Minh Trần" />
+          <p class="hint">Giúp AI chép đúng tên riêng tiếng Việt và gán đúng người phụ trách việc cần làm.</p>
+        </div>
+
+        <label class="checkbox-row">
+          <input type="checkbox" id="chatNoticeCheckbox" checked />
+          <span>Tự động gửi tin nhắn báo đang ghi biên bản vào khung chat Google Meet</span>
+        </label>
+
+        <div style="margin-top: 18px; display: flex; align-items: center; gap: 12px;">
+          <button id="btnSaveConfig" class="btn btn-primary">Lưu cài đặt</button>
+          <span id="saveNotice" style="font-size: 12px; color: var(--brand); font-weight: 600;"></span>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="options.js"></script>
+  </body>
+</html>
