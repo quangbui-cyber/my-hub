@@ -4,6 +4,7 @@ import Link from "next/link";
 import { CheckCircle2, Circle, Mic, Sparkles } from "lucide-react";
 import { motion } from "motion/react";
 import { CashflowChart } from "@/components/CashflowChart";
+import GoogleCalendarPanel from "@/components/GoogleCalendarPanel";
 import { thisMonth, useStore, vnd } from "@/lib/store";
 
 export default function Dashboard() {
@@ -53,6 +54,8 @@ export default function Dashboard() {
       </section>
 
       <CashflowChart compact />
+
+      <GoogleCalendarPanel compact />
 
       <section className="grid gap-4 lg:grid-cols-2">
         <motion.div

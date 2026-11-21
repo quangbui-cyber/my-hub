@@ -2,6 +2,8 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import {
   createSessionToken,
+  encryptGoogleTokens,
+  GOOGLE_TOKENS_COOKIE_NAME,
   OAUTH_STATE_COOKIE,
   SESSION_COOKIE_NAME,
   type AuthUser,
@@ -31,7 +33,6 @@ export async function GET(req: Request) {
     process.env.GOOGLE_REDIRECT_URI?.trim() || `${url.origin}/api/auth/google/callback`;
 
   try {
-    // 1. Đổi authorization code lấy access_token từ Google
     const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -48,12 +49,16 @@ export async function GET(req: Request) {
       return NextResponse.redirect(new URL("/?auth_error=token_exchange_failed", url.origin));
     }
 
-    const tokenData = (await tokenRes.json()) as { access_token?: string };
+    const tokenData = (await tokenRes.json()) as {
+      access_token?: string;
+      refresh_token?: string;
+      expires_in?: number;
+      scope?: string;
+    };
     if (!tokenData.access_token) {
       return NextResponse.redirect(new URL("/?auth_error=no_access_token", url.origin));
     }
 
-    // 2. Lấy thông tin hồ sơ người dùng Google
     const profileRes = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
       headers: { Authorization: `Bearer ${tokenData.access_token}` },
     });
@@ -73,18 +78,32 @@ export async function GET(req: Request) {
       return NextResponse.redirect(new URL("/?auth_error=missing_email", url.origin));
     }
 
+    const hasCalendarScope = Boolean(tokenData.scope?.includes("calendar"));
     const user: AuthUser = {
       id: profile.sub || profile.email,
       email: profile.email.toLowerCase(),
       name: profile.name || profile.email.split("@")[0],
       picture: profile.picture || null,
       provider: "google",
+      calendarConnected: hasCalendarScope,
     };
 
     const sessionToken = createSessionToken(user);
-    const res = NextResponse.redirect(new URL("/", url.origin));
+    const encryptedTokens = encryptGoogleTokens({
+      accessToken: tokenData.access_token,
+      refreshToken: tokenData.refresh_token || null,
+      expiresAt: Date.now() + (tokenData.expires_in ?? 3600) * 1000,
+    });
+
+    const res = NextResponse.redirect(new URL("/meetings", url.origin));
     res.cookies.delete(OAUTH_STATE_COOKIE);
     res.cookies.set(SESSION_COOKIE_NAME, sessionToken, {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 30 * 24 * 60 * 60,
+    });
+    res.cookies.set(GOOGLE_TOKENS_COOKIE_NAME, encryptedTokens, {
       httpOnly: true,
       sameSite: "lax",
       path: "/",

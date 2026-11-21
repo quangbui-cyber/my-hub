@@ -683,6 +683,25 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
+  // Từ content-myhub.js: Đồng bộ lịch Google Calendar sang Extension để tự khớp tên & người tham dự khi vào họp
+  if (message.type === "SYNC_CALENDAR_EVENTS_FROM_MYHUB") {
+    const events = Array.isArray(message.events) ? message.events.slice(0, 30) : [];
+    const calendarLinks = events
+      .filter((ev) => ev.meetingUrl && ev.platform && ev.meetingCode)
+      .map((ev) => ({
+        platform: ev.platform,
+        code: ev.meetingCode,
+        url: ev.meetingUrl,
+        label: `${PLATFORM_META[ev.platform]?.shortName || "Meet"}: ${ev.meetingCode}`,
+        contextTitle: ev.title || "",
+      }));
+    Promise.all([
+      chrome.storage.local.set({ myhub_calendar_events: events }),
+      calendarLinks.length > 0 ? saveDetectedLinksToHistory(calendarLinks) : Promise.resolve(),
+    ]).then(() => sendResponse({ ok: true }));
+    return true;
+  }
+
   // Từ content-scanner.js: Trang web vừa quét được các link Meet / Zoom / Teams
   if (message.type === "PAGE_LINKS_SCANNED") {
     const tabId = sender.tab?.id;

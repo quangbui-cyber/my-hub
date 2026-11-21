@@ -22,6 +22,7 @@ import {
   Trash2,
   Upload,
 } from "lucide-react";
+import GoogleCalendarPanel from "@/components/GoogleCalendarPanel";
 import MeetingRecorder from "@/components/MeetingRecorder";
 import RecapContentView from "@/components/RecapContentView";
 import { RecapGlossaryManager, RecapGlossarySuggestions } from "@/components/RecapGlossary";
@@ -405,6 +406,15 @@ export default function MeetingsPage() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <GoogleCalendarPanel
+        onSelectForRecap={(ev) => {
+          setTitle(ev.title);
+          if (ev.attendees.length > 0) setAttendeesInput(ev.attendees.join(", "));
+          setMode("record");
+          setError("");
+        }}
+      />
 
       <div className="card space-y-4">
         <div className="grid gap-3 sm:grid-cols-2">

@@ -48,11 +48,23 @@
   // Đồng bộ tài khoản hiện tại ngay khi mở trang My Hub
   syncUserToExtension(getActiveUser());
 
-  // Lắng nghe khi người dùng đăng nhập / đăng xuất Google trên giao diện My Hub
+  // Lắng nghe khi người dùng đăng nhập / đăng xuất Google hoặc tải lịch Google Calendar trên giao diện My Hub
   window.addEventListener("message", (event) => {
     if (event.source !== window || event.origin !== window.location.origin) return;
     if (event.data?.type === "MYHUB_USER_AUTH_CHANGED") {
       syncUserToExtension(event.data.user || null);
+    }
+    if (event.data?.type === "MYHUB_CALENDAR_EVENTS_SYNC" && Array.isArray(event.data.events)) {
+      try {
+        chrome.runtime
+          .sendMessage({
+            type: "SYNC_CALENDAR_EVENTS_FROM_MYHUB",
+            events: event.data.events,
+          })
+          .catch(() => undefined);
+      } catch {
+        // ignore
+      }
     }
   });
 

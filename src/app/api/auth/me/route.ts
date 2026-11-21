@@ -2,6 +2,8 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import {
   createSessionToken,
+  decryptGoogleTokens,
+  GOOGLE_TOKENS_COOKIE_NAME,
   isGoogleOAuthConfigured,
   SESSION_COOKIE_NAME,
   verifySessionToken,
@@ -12,16 +14,20 @@ export async function GET() {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   const user = verifySessionToken(token);
+  const googleTokens = decryptGoogleTokens(cookieStore.get(GOOGLE_TOKENS_COOKIE_NAME)?.value);
+
   return NextResponse.json({
-    user,
+    user: user
+      ? {
+          ...user,
+          calendarConnected: Boolean(user.calendarConnected && googleTokens?.accessToken),
+        }
+      : null,
     googleConfigured: isGoogleOAuthConfigured(),
+    calendarConnected: Boolean(googleTokens?.accessToken),
   });
 }
 
-/**
- * Hỗ trợ đăng nhập nhanh bằng tài khoản Google khi chưa kịp cấu hình GOOGLE_CLIENT_ID
- * hoặc dùng Google Identity Services / Quick Google Profile
- */
 export async function POST(req: Request) {
   try {
     const body = (await req.json()) as {
@@ -40,6 +46,7 @@ export async function POST(req: Request) {
       name,
       picture: body.picture || null,
       provider: "google",
+      calendarConnected: false,
     };
     const sessionToken = createSessionToken(user);
     const res = NextResponse.json({ user });
@@ -58,5 +65,6 @@ export async function POST(req: Request) {
 export async function DELETE() {
   const res = NextResponse.json({ ok: true });
   res.cookies.delete(SESSION_COOKIE_NAME);
+  res.cookies.delete(GOOGLE_TOKENS_COOKIE_NAME);
   return res;
 }

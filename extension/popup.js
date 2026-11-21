@@ -452,13 +452,39 @@ async function init() {
   }
 
   const pMeta = PLATFORM_META[room.platform] || PLATFORM_META.meet;
+  // Tự khớp với sự kiện Google Calendar đã đồng bộ từ My Hub (nếu trùng mã phòng)
+  const calData = await chrome.storage.local.get("myhub_calendar_events");
+  const calEvents = Array.isArray(calData?.myhub_calendar_events) ? calData.myhub_calendar_events : [];
+  const matchedCal = calEvents.find(
+    (ev) =>
+      ev.platform === room.platform &&
+      ev.meetingCode &&
+      room.code &&
+      String(ev.meetingCode).toLowerCase() === String(room.code).toLowerCase()
+  );
+
+  if (matchedCal) {
+    activeRoom = {
+      ...room,
+      title: matchedCal.title || room.title,
+    };
+    if (!customTitleInput.value && matchedCal.title) {
+      customTitleInput.value = matchedCal.title;
+    }
+    if (!attendeesInput.value && Array.isArray(matchedCal.attendees) && matchedCal.attendees.length > 0) {
+      attendeesInput.value = matchedCal.attendees.join(", ");
+    }
+  }
+
   roomBadge.className = getBadgeClass(room.platform);
   roomBadge.innerText = `${pMeta.name}: ${room.code}`;
-  meetingTitleDisplay.innerText = room.title || `Họp ${pMeta.name} (${room.code})`;
-  meetingSubtext.innerText = "Thu trọn âm thanh tab cuộc họp + micro của bạn và tự động tạo biên bản AI trên My Hub.";
+  meetingTitleDisplay.innerText = activeRoom.title || `Họp ${pMeta.name} (${room.code})`;
+  meetingSubtext.innerText = matchedCal
+    ? "📅 Đã tự khớp lịch Google Calendar (tự điền tên cuộc họp & người tham dự)."
+    : "Thu trọn âm thanh tab cuộc họp + micro của bạn và tự động tạo biên bản AI trên My Hub.";
   recordingMetaInputs.classList.remove("hidden");
   if (!customTitleInput.value) {
-    customTitleInput.placeholder = `Tên cuộc họp (mặc định: ${room.title})`;
+    customTitleInput.placeholder = `Tên cuộc họp (mặc định: ${activeRoom.title})`;
   }
   btnStart.disabled = false;
   btnStart.innerHTML = `<span>●</span> Ghi âm ${pMeta.shortName} & Tạo biên bản AI`;

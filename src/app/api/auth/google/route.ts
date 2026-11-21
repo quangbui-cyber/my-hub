@@ -20,8 +20,12 @@ export async function GET(req: Request) {
   googleAuthUrl.searchParams.set("client_id", clientId);
   googleAuthUrl.searchParams.set("redirect_uri", redirectUri);
   googleAuthUrl.searchParams.set("response_type", "code");
-  googleAuthUrl.searchParams.set("scope", "openid email profile");
-  googleAuthUrl.searchParams.set("prompt", "select_account");
+  googleAuthUrl.searchParams.set(
+    "scope",
+    "openid email profile https://www.googleapis.com/auth/calendar.events"
+  );
+  googleAuthUrl.searchParams.set("access_type", "offline");
+  googleAuthUrl.searchParams.set("prompt", "consent select_account");
   googleAuthUrl.searchParams.set("state", state);
 
   const res = NextResponse.redirect(googleAuthUrl.toString());
