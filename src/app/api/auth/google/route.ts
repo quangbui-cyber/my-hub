@@ -22,7 +22,14 @@ export async function GET(req: Request) {
   googleAuthUrl.searchParams.set("response_type", "code");
   googleAuthUrl.searchParams.set(
     "scope",
-    "openid email profile https://www.googleapis.com/auth/calendar.events"
+    [
+      "openid",
+      "email",
+      "profile",
+      "https://www.googleapis.com/auth/calendar.events",
+      "https://www.googleapis.com/auth/documents",
+      "https://www.googleapis.com/auth/drive.file",
+    ].join(" ")
   );
   googleAuthUrl.searchParams.set("access_type", "offline");
   googleAuthUrl.searchParams.set("prompt", "consent select_account");

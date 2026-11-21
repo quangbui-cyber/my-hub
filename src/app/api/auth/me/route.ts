@@ -21,10 +21,12 @@ export async function GET() {
       ? {
           ...user,
           calendarConnected: Boolean(user.calendarConnected && googleTokens?.accessToken),
+          docsConnected: Boolean(user.docsConnected && googleTokens?.accessToken),
         }
       : null,
     googleConfigured: isGoogleOAuthConfigured(),
     calendarConnected: Boolean(googleTokens?.accessToken),
+    docsConnected: Boolean(user?.docsConnected && googleTokens?.accessToken),
   });
 }
 

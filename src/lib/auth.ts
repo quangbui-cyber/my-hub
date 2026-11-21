@@ -7,6 +7,7 @@ export type AuthUser = {
   picture?: string | null;
   provider: "google" | "local";
   calendarConnected?: boolean;
+  docsConnected?: boolean;
 };
 
 export type GoogleTokens = {

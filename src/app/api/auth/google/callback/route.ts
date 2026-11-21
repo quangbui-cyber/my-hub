@@ -79,6 +79,9 @@ export async function GET(req: Request) {
     }
 
     const hasCalendarScope = Boolean(tokenData.scope?.includes("calendar"));
+    const hasDocsScope = Boolean(
+      tokenData.scope?.includes("documents") || tokenData.scope?.includes("drive.file")
+    );
     const user: AuthUser = {
       id: profile.sub || profile.email,
       email: profile.email.toLowerCase(),
@@ -86,6 +89,7 @@ export async function GET(req: Request) {
       picture: profile.picture || null,
       provider: "google",
       calendarConnected: hasCalendarScope,
+      docsConnected: hasDocsScope,
     };
 
     const sessionToken = createSessionToken(user);

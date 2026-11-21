@@ -79,6 +79,7 @@ export type Meeting = {
   meetingUrl?: string | null;
   platform?: "meet" | "zoom" | "teams" | null;
   meetingCode?: string | null;
+  googleDocUrl?: string | null;
   fromExtension?: boolean;
   glossarySuggestions?: GlossarySuggestion[];
 };

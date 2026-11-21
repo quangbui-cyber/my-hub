@@ -10,7 +10,9 @@ import {
   Circle,
   Copy,
   Download,
+  ExternalLink,
   FileAudio,
+  FileSpreadsheet,
   FileText,
   ListPlus,
   Loader2,
@@ -78,6 +80,7 @@ export default function MeetingsPage() {
   const [editDraft, setEditDraft] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [regeneratingId, setRegeneratingId] = useState<string | null>(null);
+  const [exportingDocId, setExportingDocId] = useState<string | null>(null);
 
   function buildGlossaryPayload() {
     return {
@@ -267,6 +270,48 @@ export default function MeetingsPage() {
     void navigator.clipboard.writeText(`# ${m.title}\n\n${exportText}`);
     setCopiedId(m.id);
     setTimeout(() => setCopiedId((cur) => (cur === m.id ? null : cur)), 2000);
+  }
+
+  async function exportToGoogleDoc(m: Meeting) {
+    setExportingDocId(m.id);
+    setError("");
+    try {
+      const res = await fetch("/api/docs/recap", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: m.title,
+          date: m.date,
+          attendees: m.attendees ?? [],
+          content: getMeetingContent(m),
+          actionItems: m.actionItems ?? [],
+          transcript: m.transcript ?? "",
+          meetingUrl: m.meetingUrl ?? null,
+        }),
+      });
+      const data = (await res.json()) as { docUrl?: string; error?: string; needsAuth?: boolean };
+      if (!res.ok) {
+        if (data.needsAuth) {
+          if (
+            window.confirm(
+              `${data.error || "Cần cấp quyền Google Docs."}\n\nBấm OK để chuyển sang trang đăng nhập Google và cấp quyền Google Calendar + Google Docs ngay.`
+            )
+          ) {
+            window.location.href = "/api/auth/google";
+          }
+          return;
+        }
+        throw new Error(data.error || "Không tạo được Google Doc");
+      }
+      if (data.docUrl) {
+        updateMeeting(m.id, { googleDocUrl: data.docUrl });
+        window.open(data.docUrl, "_blank", "noopener,noreferrer");
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setExportingDocId(null);
+    }
   }
 
   function toggleActionDone(meeting: Meeting, index: number) {
@@ -604,6 +649,33 @@ export default function MeetingsPage() {
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-1.5">
+                {m.googleDocUrl ? (
+                  <a
+                    href={m.googleDocUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="btn-primary !px-2.5 !py-1.5 text-xs"
+                    title="Mở biên bản trên Google Docs"
+                  >
+                    <ExternalLink size={14} />
+                    Mở Google Doc
+                  </a>
+                ) : (
+                  <button
+                    type="button"
+                    disabled={exportingDocId === m.id}
+                    onClick={() => void exportToGoogleDoc(m)}
+                    className="btn-primary !px-2.5 !py-1.5 text-xs"
+                    title="Tạo file Google Doc chứa toàn bộ biên bản & action items"
+                  >
+                    {exportingDocId === m.id ? (
+                      <Loader2 size={14} className="animate-spin" />
+                    ) : (
+                      <FileSpreadsheet size={14} />
+                    )}
+                    {exportingDocId === m.id ? "Đang tạo Google Doc…" : "Tạo Google Doc"}
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => copyRecap(m)}
