@@ -8,6 +8,14 @@ import {
 } from "@/lib/recapGlossary";
 import type { RecapTopic } from "@/lib/meetingRecap";
 
+export type UserProfile = {
+  id: string;
+  email: string;
+  name: string;
+  picture?: string | null;
+  provider?: "google" | "local";
+};
+
 export type Task = {
   id: string;
   title: string;
@@ -161,9 +169,19 @@ const seed: Data = {
 };
 
 const KEY = "my-hub-data-v1";
+const USER_KEY = "my-hub-active-user";
+
+export function getStorageKeyForUser(user: UserProfile | null): string {
+  if (!user || !user.email) return KEY;
+  return `${KEY}:${user.email.toLowerCase()}`;
+}
 
 type Store = Data & {
   ready: boolean;
+  user: UserProfile | null;
+  googleConfigured: boolean;
+  loginWithGoogleQuick: (profile: { email: string; name: string; picture?: string | null }) => Promise<void>;
+  logout: () => Promise<void>;
   addTask: (t: Omit<Task, "id" | "done">) => void;
   updateTask: (id: string, patch: Partial<Omit<Task, "id">>) => void;
   toggleTask: (id: string) => void;
@@ -188,11 +206,22 @@ const Ctx = createContext<Store | null>(null);
 
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [data, setData] = useState<Data>(seed);
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [googleConfigured, setGoogleConfigured] = useState(false);
   const [ready, setReady] = useState(false);
 
-  useEffect(() => {
+  function loadDataForUser(activeUser: UserProfile | null) {
+    const targetKey = getStorageKeyForUser(activeUser);
     try {
-      const raw = localStorage.getItem(KEY);
+      let raw = localStorage.getItem(targetKey);
+      // Nếu vừa đăng nhập tài khoản Google lần đầu mà trên máy đã có dữ liệu guest ở KEY cũ, tự động kế thừa sang tài khoản Google này
+      if (!raw && activeUser && targetKey !== KEY) {
+        const guestRaw = localStorage.getItem(KEY);
+        if (guestRaw) {
+          raw = guestRaw;
+          localStorage.setItem(targetKey, guestRaw);
+        }
+      }
       if (raw) {
         const parsed = JSON.parse(raw);
         setData({
@@ -201,13 +230,70 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           projects: Array.isArray(parsed.projects) && parsed.projects.length > 0 ? parsed.projects : seed.projects,
           glossary: Array.isArray(parsed.glossary) ? parsed.glossary : [],
         });
+      } else {
+        setData(seed);
       }
-    } catch {}
-    setReady(true);
+    } catch {
+      setData(seed);
+    }
+  }
+
+  useEffect(() => {
+    let cancelled = false;
+    async function bootstrap() {
+      let activeUser: UserProfile | null = null;
+      try {
+        const cachedUserRaw = localStorage.getItem(USER_KEY);
+        if (cachedUserRaw) {
+          activeUser = JSON.parse(cachedUserRaw) as UserProfile;
+        }
+      } catch {}
+
+      try {
+        const res = await fetch("/api/auth/me", { cache: "no-store" });
+        if (res.ok) {
+          const json = (await res.json()) as { user?: UserProfile | null; googleConfigured?: boolean };
+          if (!cancelled) {
+            setGoogleConfigured(Boolean(json.googleConfigured));
+          }
+          if (json.user) {
+            activeUser = json.user;
+            try {
+              localStorage.setItem(USER_KEY, JSON.stringify(json.user));
+            } catch {}
+          } else if (activeUser) {
+            // Cookie đã xoá trên server
+            activeUser = null;
+            try {
+              localStorage.removeItem(USER_KEY);
+            } catch {}
+          }
+        }
+      } catch {
+        // Offline fallback: giữ cachedUser
+      }
+
+      if (cancelled) return;
+      setUser(activeUser);
+      loadDataForUser(activeUser);
+      setReady(true);
+
+      // Báo cho Chrome Extension biết tài khoản đang đăng nhập
+      window.postMessage(
+        { type: "MYHUB_USER_AUTH_CHANGED", user: activeUser },
+        window.location.origin
+      );
+    }
+    void bootstrap();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  // Lắng nghe biên bản gửi từ Chrome Extension (qua content-sync.js hoặc tab khác)
+  // Lắng nghe biên bản gửi từ Chrome Extension (qua content-myhub.js hoặc tab khác)
   useEffect(() => {
+    const activeKey = getStorageKeyForUser(user);
+
     function handleWindowMessage(event: MessageEvent) {
       if (event.source !== window || event.origin !== window.location.origin) return;
       const msg = event.data;
@@ -221,7 +307,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
 
     function handleStorageChange(event: StorageEvent) {
-      if (event.key !== KEY || !event.newValue) return;
+      if (event.key !== activeKey || !event.newValue) return;
       try {
         const parsed = JSON.parse(event.newValue);
         setData((d) => ({
@@ -238,18 +324,50 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       window.removeEventListener("message", handleWindowMessage);
       window.removeEventListener("storage", handleStorageChange);
     };
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (!ready) return;
+    const activeKey = getStorageKeyForUser(user);
     try {
-      localStorage.setItem(KEY, JSON.stringify(data));
+      localStorage.setItem(activeKey, JSON.stringify(data));
     } catch {}
-  }, [data, ready]);
+  }, [data, ready, user]);
 
   const store: Store = {
     ...data,
     ready,
+    user,
+    googleConfigured,
+    loginWithGoogleQuick: async ({ email, name, picture }) => {
+      const res = await fetch("/api/auth/me", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, name, picture }),
+      });
+      const json = (await res.json()) as { user?: UserProfile; error?: string };
+      if (!res.ok || !json.user) {
+        throw new Error(json.error || "Đăng nhập thất bại");
+      }
+      try {
+        localStorage.setItem(USER_KEY, JSON.stringify(json.user));
+      } catch {}
+      setUser(json.user);
+      loadDataForUser(json.user);
+      window.postMessage(
+        { type: "MYHUB_USER_AUTH_CHANGED", user: json.user },
+        window.location.origin
+      );
+    },
+    logout: async () => {
+      await fetch("/api/auth/me", { method: "DELETE" }).catch(() => undefined);
+      try {
+        localStorage.removeItem(USER_KEY);
+      } catch {}
+      setUser(null);
+      loadDataForUser(null);
+      window.postMessage({ type: "MYHUB_USER_AUTH_CHANGED", user: null }, window.location.origin);
+    },
     addTask: (t) =>
       setData((d) => ({
         ...d,

@@ -14,6 +14,7 @@ const viewFailed = document.getElementById("viewFailed");
 
 const btnOpenHub = document.getElementById("btnOpenHub");
 const btnOptions = document.getElementById("btnOptions");
+const extUserBadge = document.getElementById("extUserBadge");
 const btnStart = document.getElementById("btnStart");
 const btnStop = document.getElementById("btnStop");
 
@@ -365,7 +366,21 @@ async function renderSessionState() {
 }
 
 async function init() {
-  const config = await getConfig();
+  const [config, userData] = await Promise.all([
+    getConfig(),
+    chrome.storage.local.get("myhub_google_user"),
+  ]);
+
+  const googleUser = userData?.myhub_google_user;
+  if (extUserBadge) {
+    if (googleUser?.email) {
+      extUserBadge.innerText = `👤 ${googleUser.name || googleUser.email}`;
+      extUserBadge.title = `Đã đồng bộ Google: ${googleUser.email}`;
+      extUserBadge.classList.remove("hidden");
+    } else {
+      extUserBadge.classList.add("hidden");
+    }
+  }
 
   btnOptions.onclick = () => chrome.runtime.openOptionsPage();
   btnOpenHub.onclick = () => chrome.tabs.create({ url: `${config.baseUrl}/meetings` });

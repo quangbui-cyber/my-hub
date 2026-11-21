@@ -672,6 +672,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
+  // Từ content-myhub.js: Đồng bộ tài khoản Google vừa đăng nhập trên My Hub sang Extension
+  if (message.type === "SYNC_USER_FROM_MYHUB") {
+    const user = message.user || null;
+    const payload = { myhub_google_user: user };
+    if (user?.name) {
+      payload.myhub_user_name = user.name;
+    }
+    chrome.storage.local.set(payload).then(() => sendResponse({ ok: true }));
+    return true;
+  }
+
   // Từ content-scanner.js: Trang web vừa quét được các link Meet / Zoom / Teams
   if (message.type === "PAGE_LINKS_SCANNED") {
     const tabId = sender.tab?.id;
